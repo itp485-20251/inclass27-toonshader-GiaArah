@@ -24,7 +24,7 @@ struct VOut
 
 VOut VS(VIn vIn)
 {
-    VOut output = (VOut)0;
+    VOut output = (VOut) 0;
 
     float4 inPos = float4(vIn.position, 1.0f);
     float4 pos = mul(inPos, c_skinMatrix[vIn.boneIndex.x]) * vIn.boneWeight.x
@@ -47,16 +47,24 @@ VOut VS(VIn vIn)
 
 float4 PS(VOut pIn) : SV_TARGET
 {
-     float4 diffuseTex = DiffuseTexture.Sample(DefaultSampler, pIn.uv);
+    float4 diffuseTex = DiffuseTexture.Sample(DefaultSampler, pIn.uv);
+    float4 finalColor = diffuseTex;
 
-     float3 n = normalize(pIn.normal);
+    float3 n = normalize(pIn.normal);
 
-     //TODO change this from a half-lambert into a toon shader
-     float d = dot(n, c_lightDir);
-     d = 0.5f * d + 0.5f;
-     d = d * d;
+    float d = dot(n, c_lightDir);
+    d = 0.5f * d + 0.5f;
+    d = d * d;
 
-     float4 light = float4(d * c_lightColor, 1.0f);
+    float4 light = float4(d * c_lightColor, 1.0f);
+    
+    // Discretize the intensity
+    if (d > 0.8)
+        finalColor = float4(1.0, 1.0, 1.0, 1.0) * finalColor;
+    else if (d > 0.5)
+        finalColor = float4(0.5, 0.5, 0.5, 1.0) * finalColor;
+    else
+        finalColor = float4(0.0, 0.0, 0.0, 1.0) * finalColor;
 
-     return diffuseTex * light;
+    return finalColor;
 }
